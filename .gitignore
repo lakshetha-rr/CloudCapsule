@@ -19,3 +19,7 @@ terraform.tfvars
 crash.log
 .DS_Store
 Thumbs.db
+# Local development backups
+*.backup
+*.before-lifecycle
+*.phase2-backup
