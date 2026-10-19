@@ -23,3 +23,5 @@ Thumbs.db
 *.backup
 *.before-lifecycle
 *.phase2-backup
+# Local VS Code settings
+.vscode/
