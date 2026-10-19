@@ -6,6 +6,20 @@ CloudCapsule is a local-first application for registering application modules, m
 
 > **Project status:** The local application is implemented and tested. Lifecycle actions are simulated locally; AWS infrastructure provisioning and deployment are planned, not implemented.
 
+## Screenshots
+
+### Dashboard Overview
+
+![CloudCapsule desktop dashboard](screenshots/dashboard-desktop.png)
+
+### Lifecycle Activity and Audit History
+
+![CloudCapsule lifecycle activity history](screenshots/module-details_1.png)
+
+### Module Running State
+
+![CloudCapsule module running state](screenshots/module-running.png)
+
 ## Features
 
 - **Module management:** Register, list, retrieve, and update application modules.
@@ -43,35 +57,41 @@ Docker Compose provides the local backend and database environment. AWS deployme
 | Frontend | React, TypeScript, Vite, CSS |
 | Backend | Python, FastAPI |
 | Database | PostgreSQL |
-| Database access | Psycopg, SQLAlchemy metadata |
-| Migrations | Alembic |
+| Database migrations | Alembic |
 | Containerization | Docker, Docker Compose |
 | Testing | Pytest, FastAPI TestClient |
-| Planned cloud infrastructure | AWS, Terraform |
+| API documentation | OpenAPI, Swagger UI |
 
 ## Prerequisites
+
+Install the following before running CloudCapsule:
 
 - Git
 - Docker Desktop with Docker Compose
 - Node.js and npm
-- PowerShell on Windows, or an equivalent terminal
+
+Python dependencies for the backend are installed inside the Docker image.
 
 ## Getting Started
 
 ### 1. Clone the repository
 
-```powershell
+```bash
 git clone https://github.com/lakshetha-rr/CloudCapsule.git
 cd CloudCapsule
 ```
 
-### 2. Configure the backend environment
+### 2. Configure environment variables
 
-Create a root `.env` file using `.env.example` as a reference.
+Create a root `.env` file based on `.env.example`.
 
-Configure `DATABASE_URL` for the PostgreSQL service in Docker Compose. For the local Compose network, the database hostname is `db`, the port is `5432`, and the database name is `cloudcapsule`.
+In PowerShell:
 
-Use the credentials configured for your local database service. Never commit `.env` files or production credentials.
+```powershell
+Copy-Item .env.example .env
+```
+
+Open `.env` and configure `DATABASE_URL` for the local PostgreSQL service according to the existing Compose configuration. Do not commit `.env` or real credentials.
 
 ### 3. Start the backend and database
 
@@ -81,22 +101,10 @@ From the repository root, run:
 docker compose up -d --build
 ```
 
-Check the services:
+Check the service status:
 
 ```powershell
 docker compose ps
-```
-
-Check API health:
-
-```powershell
-Invoke-RestMethod http://localhost:8000/health
-```
-
-Check database health:
-
-```powershell
-Invoke-RestMethod http://localhost:8000/health/database
 ```
 
 ### 4. Start the frontend
@@ -109,101 +117,103 @@ npm install
 npm run dev -- --host 127.0.0.1
 ```
 
-Open the local URL printed by Vite in your browser. The development server commonly uses port `5173`, but use the exact URL shown in the terminal.
+Open the local URL printed by Vite in your browser. The default address is usually `http://127.0.0.1:5173/`; if that port is occupied, Vite may select another port.
 
-### 5. Explore the application
+### 5. Verify the backend
 
-- **Web dashboard:** Open the Vite development URL printed in the frontend terminal.
-- **Swagger UI:** http://localhost:8000/docs
-- **OpenAPI schema:** http://localhost:8000/openapi.json
-- **API health:** http://localhost:8000/health
-- **Database health:** http://localhost:8000/health/database
+- Health check: `http://localhost:8000/health`
+- Database health: `http://localhost:8000/health/database`
+- Interactive API documentation: `http://localhost:8000/docs`
 
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/` | API root information |
-| GET | `/health` | Check application health |
+| GET | `/health` | Check API health |
 | GET | `/health/database` | Check database connectivity |
 | POST | `/modules` | Register a module |
 | GET | `/modules` | List registered modules |
-| GET | `/modules/{module_id}` | Retrieve a module |
-| PATCH | `/modules/{module_id}` | Update module details |
-| POST | `/modules/{module_id}/actions` | Execute a simulated lifecycle action |
-| GET | `/modules/{module_id}/events` | Retrieve lifecycle event history |
+| GET | `/modules/{id}` | Retrieve a module |
+| PATCH | `/modules/{id}` | Update module information |
+| POST | `/modules/{id}/actions` | Request a lifecycle action |
+| GET | `/modules/{id}/events` | Retrieve module lifecycle events |
 
-Use Swagger UI to inspect request schemas and try endpoints interactively.
+Use the interactive Swagger UI at `/docs` to inspect request schemas and try the endpoints.
 
-## Lifecycle Management
+## Module Lifecycle
 
-CloudCapsule supports the following simulated actions:
+CloudCapsule simulates module lifecycle operations and validates permitted state transitions.
 
-- **Deploy:** Simulates deployment and transition to the running state.
-- **Stop:** Transitions a running module to the stopped state.
-- **Restart:** Simulates restarting an eligible stopped module.
+| Action | Purpose |
+|---|---|
+| Deploy | Simulate deploying a module |
+| Stop | Simulate stopping a running module |
+| Restart | Simulate restarting a stopped module |
 
-The API validates actions against the module's current state. Invalid transitions are rejected and recorded in the event history.
+Invalid transitions are rejected, and lifecycle events are recorded for auditing.
 
-These actions do not create, modify, or terminate AWS resources.
+**Important:** These operations are local simulations. They do not provision, deploy, stop, or modify actual AWS resources.
 
-## Testing and Database Migrations
+## Running Tests
 
-Run the backend test suite from the repository root:
-
-```powershell
-docker compose exec backend python -m pytest -q
-```
-
-Check the current Alembic migration:
+From the repository root, run the backend test suite inside the backend container:
 
 ```powershell
-docker compose exec backend alembic current
+docker compose exec backend pytest -q
 ```
 
-Check whether model metadata and migrations are consistent:
+To check whether the Alembic schema matches the application's models:
 
 ```powershell
 docker compose exec backend alembic check
 ```
 
-Build the frontend for production:
+To verify the frontend production build, run:
 
 ```powershell
-npm --prefix frontend run build
+cd frontend
+npm run build
 ```
 
-## Development Status
+## Project Structure
 
-### Implemented
+```text
+CloudCapsule/
+├── backend/
+│   ├── app/
+│   ├── tests/
+│   ├── alembic/
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── package.json
+├── screenshots/
+│   ├── dashboard-desktop.png
+│   ├── module-details_1.png
+│   ├── module-details_2.png
+│   ├── module-details_3.png
+│   └── module-running.png
+├── compose.yaml
+├── .env.example
+├── .gitignore
+└── README.md
+```
 
-- React and TypeScript dashboard
-- FastAPI REST API
-- PostgreSQL persistence
-- Alembic migration management
-- Module lifecycle simulation
-- Lifecycle event history
-- Docker Compose local environment
-- Automated backend tests
-- Responsive dashboard layout
+## Security and Development Notes
 
-### Planned
+- Environment secrets should remain in `.env`, which must not be committed.
+- `.env.example` should contain placeholders or local development configuration only.
+- Lifecycle actions currently operate in local simulation mode.
+- AWS infrastructure provisioning and deployment are planned future work, not implemented features.
 
-- AWS infrastructure architecture and provisioning
-- Terraform-based infrastructure as code
-- Cloud deployment workflows
-- Cloud monitoring and alerting
-- Security controls and recovery workflows
+## Future Improvements
 
-AWS resources will only be provisioned after the architecture, permissions, and expected costs have been reviewed and explicitly approved.
-
-## Security Notes
-
-- Keep `.env`, access tokens, credentials, and private keys out of Git.
-- Never commit production secrets or Terraform state files.
-- Use least-privilege credentials for future cloud integrations.
-- Review network exposure and access controls before deployment beyond localhost.
+- Integrate AWS infrastructure provisioning after architecture and cost review.
+- Add authentication and role-based access control.
+- Improve observability, operational metrics, and event filtering.
+- Add deployment configuration and cloud resource state tracking.
 
 ## License
 
-No license has been selected yet. All rights reserved unless a license is added to this repository.
+No license has been specified yet. All rights and reuse permissions remain subject to the repository owner's terms until a license is added.
