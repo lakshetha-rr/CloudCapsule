@@ -286,3 +286,100 @@
   .form-full, .form-actions { grid-column: auto; }
   .page-footer { align-items: flex-start; flex-direction: column; }
 }
+
+/* Responsive module table: keep every action accessible on small screens */
+@media (max-width: 700px) {
+  .table-scroll {
+    overflow-x: visible;
+  }
+
+  .module-table,
+  .module-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .module-table thead {
+    display: none;
+  }
+
+  .module-table tbody tr {
+    display: block;
+    margin: 0 12px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: #fff;
+    overflow: hidden;
+  }
+
+  .module-table tbody tr:hover,
+  .module-table tbody tr.selected-row {
+    background: #f8faff;
+  }
+
+  .module-table tbody tr td,
+  .module-table tbody tr td:first-child {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f0f2f6;
+    min-width: 0;
+  }
+
+  .module-table tbody tr td::before {
+    color: #929bad;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+  }
+
+  .module-table tbody tr td:nth-child(1)::before {
+    content: "MODULE";
+  }
+
+  .module-table tbody tr td:nth-child(2)::before {
+    content: "ENVIRONMENT";
+  }
+
+  .module-table tbody tr td:nth-child(3)::before {
+    content: "STATUS";
+  }
+
+  .module-table tbody tr td:nth-child(4)::before {
+    content: "CREATED";
+  }
+
+  .module-table tbody tr td:nth-child(5)::before {
+    content: "ACTIONS";
+  }
+
+  .module-name {
+    min-width: 0;
+  }
+
+  .module-name > span:last-child {
+    min-width: 0;
+  }
+
+  .module-name strong,
+  .module-name small {
+    max-width: 100%;
+  }
+
+  .date-cell {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .row-actions {
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .action-button {
+    padding: 7px 9px;
+  }
+}
