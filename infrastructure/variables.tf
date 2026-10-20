@@ -59,3 +59,26 @@ variable "private_app_subnet_cidrs" {
     error_message = "Provide exactly two private application subnet CIDRs."
   }
 }
+
+
+variable "ecs_task_cpu" {
+  description = "Fargate task CPU units. 256 represents 0.25 vCPU."
+  type        = number
+  default     = 256
+
+  validation {
+    condition     = contains([256, 512, 1024], var.ecs_task_cpu)
+    error_message = "For this demo, ecs_task_cpu must be 256, 512, or 1024."
+  }
+}
+
+variable "ecs_task_memory" {
+  description = "Fargate task memory in MiB."
+  type        = number
+  default     = 512
+
+  validation {
+    condition     = contains([512, 1024, 2048], var.ecs_task_memory)
+    error_message = "For this demo, ecs_task_memory must be 512, 1024, or 2048 MiB."
+  }
+}
