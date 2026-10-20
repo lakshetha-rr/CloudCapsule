@@ -31,3 +31,31 @@ variable "monthly_budget_inr" {
     error_message = "monthly_budget_inr must be greater than zero."
   }
 }
+
+variable "vpc_cidr" {
+  description = "CIDR range for the CloudCapsule VPC."
+  type        = string
+  default     = "10.20.0.0/16"
+}
+
+variable "public_subnet_cidrs" {
+  description = "CIDR ranges for the two public subnets."
+  type        = list(string)
+  default     = ["10.20.1.0/24", "10.20.2.0/24"]
+
+  validation {
+    condition     = length(var.public_subnet_cidrs) == 2
+    error_message = "Provide exactly two public subnet CIDRs."
+  }
+}
+
+variable "private_app_subnet_cidrs" {
+  description = "CIDR ranges for the two private application subnets."
+  type        = list(string)
+  default     = ["10.20.11.0/24", "10.20.12.0/24"]
+
+  validation {
+    condition     = length(var.private_app_subnet_cidrs) == 2
+    error_message = "Provide exactly two private application subnet CIDRs."
+  }
+}
