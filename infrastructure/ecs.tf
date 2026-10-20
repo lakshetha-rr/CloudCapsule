@@ -68,10 +68,35 @@ resource "aws_ecs_task_definition" "backend" {
         protocol      = "tcp"
       }]
 
-      environment = [{
-        name  = "ENVIRONMENT"
-        value = var.environment
-      }]
+      environment = [
+        {
+          name  = "ENVIRONMENT"
+          value = var.environment
+        },
+        {
+          name  = "DB_HOST"
+          value = aws_db_instance.postgres.address
+        },
+        {
+          name  = "DB_PORT"
+          value = "5432"
+        },
+        {
+          name  = "DB_NAME"
+          value = var.db_name
+        }
+      ]
+
+      secrets = [
+        {
+          name      = "DB_USER"
+          valueFrom = "${aws_db_instance.postgres.master_user_secret[0].secret_arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${aws_db_instance.postgres.master_user_secret[0].secret_arn}:password::"
+        }
+      ]
 
       healthCheck = {
         command = [
@@ -113,4 +138,18 @@ output "ecs_cluster_name" {
 output "backend_task_definition_family" {
   description = "Family of the planned backend task definition."
   value       = aws_ecs_task_definition.backend.family
+}
+
+resource "aws_iam_role_policy" "ecs_read_database_secret" {
+  name = "${local.name_prefix}-read-db-secret"
+  role = aws_iam_role.ecs_task_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = aws_db_instance.postgres.master_user_secret[0].secret_arn
+    }]
+  })
 }

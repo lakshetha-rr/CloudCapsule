@@ -1,6 +1,6 @@
 
 import os
-from urllib.parse import urlsplit
+from urllib.parse import quote, urlsplit
 
 import psycopg
 from psycopg.rows import dict_row
@@ -10,8 +10,29 @@ def get_database_url() -> str:
     database_url = os.getenv("DATABASE_URL", "").strip()
 
     if not database_url:
-        raise RuntimeError(
-            "DATABASE_URL environment variable is not set"
+        host = os.getenv("DB_HOST", "").strip()
+        name = os.getenv("DB_NAME", "").strip()
+        username = os.getenv("DB_USER", "").strip()
+        password = os.getenv("DB_PASSWORD", "")
+        port = os.getenv("DB_PORT", "5432").strip()
+
+        if not all([host, name, username, password]):
+            raise RuntimeError(
+                "Set DATABASE_URL or all required DB_* variables"
+            )
+
+        try:
+            parsed_port = int(port)
+        except ValueError:
+            raise RuntimeError("DB_PORT must be a valid port") from None
+
+        if not 1 <= parsed_port <= 65535:
+            raise RuntimeError("DB_PORT must be between 1 and 65535")
+
+        database_url = (
+            f"postgresql://{quote(username, safe='')}:"
+            f"{quote(password, safe='')}@{host}:{parsed_port}/"
+            f"{quote(name, safe='')}"
         )
 
     try:
