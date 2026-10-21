@@ -1,0 +1,14 @@
+# Ensure these patterns are present in the repository root .gitignore
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+*.tfvars
+!example.tfvars
+
+# Terraform generated files
+**/.terraform/*
+*.tfstate
+*.tfstate.*
