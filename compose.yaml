@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: cloudcapsule
       POSTGRES_USER: cloudcapsule
-      POSTGRES_PASSWORD: localdevpassword
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

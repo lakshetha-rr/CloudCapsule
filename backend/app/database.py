@@ -18,9 +18,8 @@ def get_database_url() -> str:
 
         if not all([host, name, username, password]):
             raise RuntimeError(
-                "Set DATABASE_URL or all required DB_* variables"
+                "DATABASE_URL is not set and required DB_* variables are missing"
             )
-
         try:
             parsed_port = int(port)
         except ValueError:
