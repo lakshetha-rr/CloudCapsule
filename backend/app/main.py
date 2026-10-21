@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from typing import Any, Literal
 
 import psycopg
@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.database import get_connection
+from app.aws_lifecycle import record_desired_state
 
 
 logging.basicConfig(
@@ -441,6 +442,47 @@ def perform_lifecycle_action(module_id: int, request: LifecycleAction):
         )
 
 
+@app.post("/modules/{module_id}/aws-sync")
+def sync_module_to_aws(module_id: int):
+    try:
+        with get_connection() as connection:
+            module = connection.execute(
+                "SELECT id, name, status FROM modules WHERE id = %s",
+                (module_id,),
+            ).fetchone()
+
+        if module is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Module {module_id} not found",
+            )
+
+        action = "stop" if module["status"] == "stopped" else "deploy"
+        aws_result = record_desired_state(
+            module["id"], module["name"], action
+        )
+
+        return {
+            "module_id": module["id"],
+            "database_status": module["status"],
+            "aws_sync": aws_result,
+            "simulation": False,
+        }
+    except HTTPException:
+        raise
+    except RuntimeError:
+        logger.exception("AWS module sync failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Could not synchronize module with AWS",
+        )
+    except psycopg.Error:
+        logger.exception("Database lookup for AWS sync failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Could not read module from the database",
+        )
+
 @app.get("/modules/{module_id}/events")
 def list_module_events(module_id: int):
     try:
@@ -469,3 +511,5 @@ def list_module_events(module_id: int):
     except psycopg.Error:
         logger.exception("Could not retrieve module events")
         raise HTTPException(status_code=503, detail="Could not retrieve lifecycle events.")
+
+
