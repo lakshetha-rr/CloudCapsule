@@ -131,22 +131,35 @@ resource "aws_instance" "app" {
 
   user_data = <<-USERDATA
     #!/bin/bash
-    set -euxo pipefail
+    set -euo pipefail
     exec > >(tee -a /var/log/cloudcapsule-setup.log) 2>&1
 
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io docker-compose-v2 git
+    DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io docker-compose-v2 git openssl
     systemctl enable --now docker
 
     git clone https://github.com/lakshetha-rr/CloudCapsule.git /opt/CloudCapsule
     cd /opt/CloudCapsule
 
+    umask 077
     DB_PASSWORD="$(openssl rand -hex 24)"
-    cat > .env <<ENV
-    DATABASE_URL=postgresql://cloudcapsule:$${DB_PASSWORD}@db:5432/cloudcapsule
-    POSTGRES_PASSWORD=$${DB_PASSWORD}
-    ENV
-    chmod 600 .env
+    export DB_PASSWORD
+    python3 - <<'PY'
+    import os
+    from pathlib import Path
+
+    env = Path("/opt/CloudCapsule/.env")
+    env.write_text(
+        "DATABASE_URL=postgresql://cloudcapsule:"
+        + os.environ["DB_PASSWORD"]
+        + "@db:5432/cloudcapsule\n"
+        + "POSTGRES_PASSWORD="
+        + os.environ["DB_PASSWORD"]
+        + "\n"
+    )
+    env.chmod(0o600)
+    PY
+    unset DB_PASSWORD
 
     sed -i 's/127.0.0.1:8000:8000/8000:8000/' compose.yaml
     docker compose up -d --build
