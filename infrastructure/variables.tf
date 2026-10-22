@@ -82,3 +82,32 @@ variable "ecs_task_memory" {
     error_message = "For this demo, ecs_task_memory must be 512, 1024, or 2048 MiB."
   }
 }
+
+variable "private_db_subnet_cidrs" {
+  description = "CIDR ranges for private database subnets."
+  type        = list(string)
+  default     = ["10.20.21.0/24", "10.20.22.0/24"]
+
+  validation {
+    condition     = length(var.private_db_subnet_cidrs) == 2
+    error_message = "Provide exactly two private database subnet CIDRs."
+  }
+}
+
+variable "db_name" {
+  description = "PostgreSQL database name."
+  type        = string
+  default     = "cloudcapsule"
+}
+
+variable "db_username" {
+  description = "PostgreSQL master username."
+  type        = string
+  default     = "cloudcapsule"
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class for the budget-conscious demo."
+  type        = string
+  default     = "db.t3.micro"
+}

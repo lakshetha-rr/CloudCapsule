@@ -101,3 +101,37 @@ output "private_app_subnet_ids" {
   description = "Private application subnet IDs across two availability zones."
   value       = aws_subnet.private_app[*].id
 }
+
+resource "aws_subnet" "private_db" {
+  count = 2
+
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.private_db_subnet_cidrs[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = "${local.name_prefix}-private-db-${count.index + 1}"
+    Tier = "private-db"
+  }
+}
+
+resource "aws_route_table" "private_db" {
+  count  = 2
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${local.name_prefix}-private-db-rt-${count.index + 1}"
+  }
+}
+
+resource "aws_route_table_association" "private_db" {
+  count = 2
+
+  subnet_id      = aws_subnet.private_db[count.index].id
+  route_table_id = aws_route_table.private_db[count.index].id
+}
+
+output "private_db_subnet_ids" {
+  description = "Private database subnet IDs across two availability zones."
+  value       = aws_subnet.private_db[*].id
+}
