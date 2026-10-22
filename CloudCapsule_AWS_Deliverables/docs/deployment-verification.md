@@ -61,3 +61,24 @@ Retrieve the module lifecycle record:
 Run backend tests:
 
 `docker compose exec -T backend python -m pytest tests -q`
+
+## Latest Deployment Verification — 23 October 2026
+
+### Verified Results
+- EC2 instance `i-02f71a810e54296d5` is running in `ap-south-1`.
+- EC2 system and instance status checks both returned `ok`.
+- Backend and PostgreSQL Docker containers are running; PostgreSQL reports healthy.
+- Local API health check returned `healthy` for `cloudcapsule-api`.
+- Regression tests passed: **27 passed, 1 deprecation warning**, using `python -m pytest -q` inside the backend container.
+- AWS Systems Manager Parameter Store contains `/cloudcapsule/modules/1`, with desired status `running`.
+- The EC2 security group restricts inbound port 8000 to `122.187.117.179/32`.
+
+### Deployment Limitations
+- No ECS cluster or ECR repository was found in `ap-south-1` during the read-only checks.
+- The API reports `mode: local-development`.
+- The Parameter Store entry records desired state; it does not demonstrate automatic module orchestration.
+- The Terraform RDS and network configuration remains undeployed.
+- No Terraform apply or AWS resource creation was performed during this verification.
+
+### Test Note
+Use `python -m pytest -q` inside the backend container. Running `pytest -q` directly produced import errors, while the Python module invocation passed all 27 tests.
