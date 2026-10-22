@@ -33,8 +33,9 @@ resource "aws_db_instance" "postgres" {
   vpc_security_group_ids = [aws_security_group.database.id]
 
   auto_minor_version_upgrade = true
-  deletion_protection        = false
-  skip_final_snapshot        = true
+  deletion_protection        = true
+  skip_final_snapshot        = false
+  final_snapshot_identifier  = "${local.name_prefix}-postgres-final"
 
   tags = {
     Name      = "${local.name_prefix}-postgres"
